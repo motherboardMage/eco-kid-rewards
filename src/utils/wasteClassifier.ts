@@ -121,10 +121,10 @@ export const classifyWaste = async (imageData?: string | HTMLImageElement | Imag
       if (typeof imageData === 'string') {
         // Create an image element from base64 string
         imgElement = new Image();
-        imgElement.src = imageData;
-        // Wait for the image to load
-        await new Promise((resolve) => {
-          imgElement.onload = resolve;
+        await new Promise<void>((resolve) => {
+          const img = imgElement as HTMLImageElement;
+          img.onload = () => resolve();
+          img.src = imageData;
         });
       } else {
         imgElement = imageData;
