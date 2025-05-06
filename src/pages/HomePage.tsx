@@ -63,16 +63,25 @@ const HomePage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <Link to="/camera" className="waste-category bg-eco-light-green/10">
-          <Camera size={32} className="text-eco-green mb-2" />
-          <span className="font-semibold">Scan Waste</span>
-        </Link>
-        <Link to="/rewards" className="waste-category bg-eco-yellow/10">
-          <Gift size={32} className="text-eco-orange mb-2" />
-          <span className="font-semibold">Rewards</span>
-        </Link>
-      </div>
+      <Link to="/camera" className="mb-6">
+        <div className="bg-eco-green text-white rounded-2xl p-6 shadow-md hover:bg-eco-green/90 transition-colors flex items-center justify-between">
+          <div className="flex flex-col">
+            <h3 className="text-xl font-bold mb-2">Scan Waste</h3>
+            <p className="text-sm text-white/80">Identify and learn waste categories</p>
+          </div>
+          <Camera size={40} className="ml-4" />
+        </div>
+      </Link>
+
+      <Link to="/rewards" className="mb-6">
+        <div className="bg-eco-orange text-white rounded-2xl p-6 shadow-md hover:bg-eco-orange/90 transition-colors flex items-center justify-between">
+          <div className="flex flex-col">
+            <h3 className="text-xl font-bold mb-2">Rewards</h3>
+            <p className="text-sm text-white/80">Redeem your points for cool prizes</p>
+          </div>
+          <Gift size={40} className="ml-4" />
+        </div>
+      </Link>
 
       <div className="bg-white rounded-2xl shadow-md p-4 mb-6">
         <h3 className="text-lg font-semibold mb-2">Today's Challenge</h3>

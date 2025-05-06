@@ -1,15 +1,17 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
 import { Camera, RefreshCcw } from "lucide-react";
-import { classifyWaste } from "@/utils/wasteClassifier";
+import { classifyWaste, initializeModel } from "@/utils/wasteClassifier";
 import { useUserStore } from "@/stores/userStore";
 import Confetti from "@/components/Confetti";
 
 const CameraPage = () => {
   const [cameraActive, setCameraActive] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [modelLoaded, setModelLoaded] = useState(false);
   const [resultItem, setResultItem] = useState<null | {
     category: string;
     confidence: number;
@@ -18,16 +20,55 @@ const CameraPage = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { addCoins } = useUserStore();
+  const { addCoins, incrementTotalScanned } = useUserStore();
+  
+  // Load TensorFlow model on component mount
+  useEffect(() => {
+    const loadModel = async () => {
+      try {
+        const isLoaded = await initializeModel();
+        if (isLoaded) {
+          setModelLoaded(true);
+          toast("Model loaded", {
+            description: "Waste detection model is ready!",
+          });
+        }
+      } catch (err) {
+        console.error("Error loading model:", err);
+        toast("Model Error", {
+          description: "Could not load the waste detection model.",
+        });
+      }
+    };
+    
+    loadModel();
+    
+    // Clean up on unmount
+    return () => {
+      stopCamera();
+    };
+  }, []);
   
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
-      });
+      const constraints = {
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          if (videoRef.current) {
+            videoRef.current.play()
+              .catch(err => console.error("Error playing video:", err));
+          }
+        };
         setCameraActive(true);
       }
     } catch (err) {
@@ -48,13 +89,14 @@ const CameraPage = () => {
   };
 
   const captureImage = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current || !modelLoaded) return;
     
     setProcessing(true);
     
     const context = canvasRef.current.getContext("2d");
     if (!context) return;
     
+    // Set canvas dimensions to match the video frame
     canvasRef.current.width = videoRef.current.videoWidth;
     canvasRef.current.height = videoRef.current.videoHeight;
     
@@ -66,36 +108,56 @@ const CameraPage = () => {
       videoRef.current.videoHeight
     );
     
-    // In a real app, we would send this image to TensorFlow Lite for processing
-    // For now, we'll use our mock classifier
-    setTimeout(() => {
-      processWasteImage();
-    }, 1500);
+    // Process the image with TensorFlow Lite
+    processWasteImage();
   };
 
   const processWasteImage = async () => {
     try {
-      // In a real app, we'd use the canvas image with TensorFlow
-      // const imageData = canvasRef.current?.toDataURL('image/jpeg');
+      // Get the image data from canvas for TensorFlow processing
+      const imageData = canvasRef.current?.toDataURL('image/jpeg');
       
-      // Using our mock classifier for demo purposes
+      // In a real implementation, we would pass the image data to the TensorFlow model
+      // For now, we're using our mock classifier
       const result = await classifyWaste();
       
       if (result) {
         setResultItem(result);
-        if (result.confidence > 0.7) {
-          addCoins(result.reward);
+        
+        // Provide feedback based on confidence level
+        if (result.confidence > 0.85) {
+          // Excellent detection
+          addCoins(result.reward + 2);
+          incrementTotalScanned(result.categoryId);
           setShowConfetti(true);
+          
+          toast(`Amazing! +${result.reward + 2} coins`, {
+            description: `Perfect! That's definitely ${result.category} waste!`,
+          });
+        } else if (result.confidence > 0.7) {
+          // Good detection
+          addCoins(result.reward);
+          incrementTotalScanned(result.categoryId);
+          setShowConfetti(true);
+          
           toast(`Great job! +${result.reward} coins`, {
             description: `You correctly identified ${result.category} waste!`,
           });
+        } else if (result.confidence > 0.5) {
+          // Uncertain detection
+          addCoins(Math.floor(result.reward / 2));
           
-          setTimeout(() => setShowConfetti(false), 3000);
+          toast("Good try!", {
+            description: `I think this might be ${result.category} waste, but I'm not entirely sure.`,
+          });
         } else {
-          toast("Not quite sure", {
-            description: `I think this might be ${result.category} waste, but I'm not certain.`,
+          // Poor detection
+          toast("Try again", {
+            description: "I couldn't identify that clearly. Try a different angle or better lighting.",
           });
         }
+        
+        setTimeout(() => setShowConfetti(false), 3000);
       }
       
       setProcessing(false);
@@ -107,13 +169,6 @@ const CameraPage = () => {
       setProcessing(false);
     }
   };
-
-  // Clean up camera on unmount
-  useEffect(() => {
-    return () => {
-      stopCamera();
-    };
-  }, []);
 
   return (
     <>
@@ -128,13 +183,16 @@ const CameraPage = () => {
               ref={videoRef}
               autoPlay 
               playsInline
+              muted
               className="w-full h-full object-cover"
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full p-6">
               <Camera size={48} className="text-eco-green mb-4" />
               <p className="text-center text-gray-600">
-                Tap the button below to activate the camera and scan waste items
+                {modelLoaded ? 
+                  "Tap the button below to activate the camera and scan waste items" :
+                  "Loading waste detection model..."}
               </p>
             </div>
           )}
@@ -160,6 +218,7 @@ const CameraPage = () => {
             <Button 
               className="button-primary flex-1"
               onClick={startCamera}
+              disabled={!modelLoaded}
             >
               <Camera size={20} className="mr-2" /> Start Camera
             </Button>

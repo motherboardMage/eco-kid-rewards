@@ -1,6 +1,6 @@
 
 import { useLocation, Link } from "react-router-dom";
-import { Home, Camera, Gift, Trophy } from "lucide-react";
+import { Home, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NavBar = () => {
@@ -8,8 +8,6 @@ const NavBar = () => {
   
   const navItems = [
     { icon: Home, label: "Home", path: "/" },
-    { icon: Camera, label: "Camera", path: "/camera" },
-    { icon: Gift, label: "Rewards", path: "/rewards" },
     { icon: Trophy, label: "Progress", path: "/progress" }
   ];
 
