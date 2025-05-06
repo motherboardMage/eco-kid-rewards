@@ -1,145 +1,58 @@
-
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge, Gift, Sticker } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/sonner";
-import { useUserStore } from "@/stores/userStore";
 
 const RewardsPage = () => {
-  const { coins, badges, stickers, unlockBadge, unlockSticker } = useUserStore();
-  
-  // Available rewards that can be unlocked
-  const availableBadges = [
-    { id: "recycler", name: "Master Recycler", cost: 20, image: "🏆" },
-    { id: "biodegradable", name: "Biodegradable Expert", cost: 30, image: "🍃" },
-    { id: "plastic", name: "Plastic Warrior", cost: 50, image: "🥤" },
-    { id: "paper", name: "Paper Saver", cost: 25, image: "📄" },
-    { id: "glass", name: "Glass Guardian", cost: 40, image: "🍶" },
-  ];
-  
-  const availableStickers = [
-    { id: "earth", name: "Happy Earth", cost: 15, image: "🌎" },
-    { id: "tree", name: "Growing Tree", cost: 25, image: "🌳" },
-    { id: "recycle", name: "Recycle Symbol", cost: 10, image: "♻️" },
-    { id: "turtle", name: "Sea Turtle", cost: 30, image: "🐢" },
-    { id: "flower", name: "Blooming Flower", cost: 20, image: "🌻" },
-  ];
-  
-  const unlockReward = (type: "badge" | "sticker", id: string, cost: number) => {
-    if (coins < cost) {
-      toast("Not enough coins", {
-        description: `You need ${cost} coins to unlock this ${type}.`,
-        variant: "destructive"
+  const [rewards, setRewards] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate fetching rewards data
+    setTimeout(() => {
+      setRewards([
+        { id: 1, name: "Eco-Friendly Stickers", description: "A set of cool stickers!", points: 50 },
+        { id: 2, name: "Plant a Tree", description: "We'll plant a tree in your name!", points: 200 },
+        { id: 3, name: "Reusable Water Bottle", description: "Stay hydrated and eco-conscious.", points: 100 },
+      ]);
+      setLoading(false);
+      toast("Rewards are here!", {
+        description: "Check out the latest eco-friendly rewards!",
+        position: "top-center",
       });
-      return;
-    }
-    
-    if (type === "badge") {
-      unlockBadge(id, cost);
-    } else {
-      unlockSticker(id, cost);
-    }
-    
-    toast(`${type.charAt(0).toUpperCase() + type.slice(1)} Unlocked!`, {
-      description: `You've successfully unlocked a new ${type}!`,
-    });
-  };
-  
-  const isUnlocked = (type: "badge" | "sticker", id: string) => {
-    return type === "badge" 
-      ? badges.includes(id)
-      : stickers.includes(id);
-  };
-  
-  return (
-    <div className="flex flex-col h-full">
-      <h1 className="text-2xl font-bold text-center mb-4">Your Rewards</h1>
-      
-      <div className="bg-white rounded-2xl shadow-md p-4 mb-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Your Coins</h2>
-          <div className="flex items-center">
-            <span className="text-2xl mr-2">🪙</span>
-            <span className="text-xl font-bold">{coins}</span>
-          </div>
-        </div>
+    }, 1500);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg text-gray-600">Loading rewards...</p>
       </div>
-      
-      <Tabs defaultValue="badges" className="flex-1">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="badges" className="text-lg">
-            <Badge className="mr-2" size={18} />
-            Badges
-          </TabsTrigger>
-          <TabsTrigger value="stickers" className="text-lg">
-            <Sticker className="mr-2" size={18} />
-            Stickers
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="badges" className="mt-0">
-          <div className="grid grid-cols-2 gap-4">
-            {availableBadges.map((badge) => (
-              <RewardCard
-                key={badge.id}
-                name={badge.name}
-                image={badge.image}
-                cost={badge.cost}
-                unlocked={isUnlocked("badge", badge.id)}
-                onUnlock={() => unlockReward("badge", badge.id, badge.cost)}
-              />
-            ))}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="stickers" className="mt-0">
-          <div className="grid grid-cols-2 gap-4">
-            {availableStickers.map((sticker) => (
-              <RewardCard
-                key={sticker.id}
-                name={sticker.name}
-                image={sticker.image}
-                cost={sticker.cost}
-                unlocked={isUnlocked("sticker", sticker.id)}
-                onUnlock={() => unlockReward("sticker", sticker.id, sticker.cost)}
-              />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-};
+    );
+  }
 
-interface RewardCardProps {
-  name: string;
-  image: string;
-  cost: number;
-  unlocked: boolean;
-  onUnlock: () => void;
-}
-
-const RewardCard = ({ name, image, cost, unlocked, onUnlock }: RewardCardProps) => {
   return (
-    <div className="reward-item">
-      <div className="text-4xl mb-2">{image}</div>
-      <h3 className="font-bold text-center">{name}</h3>
-      
-      {unlocked ? (
-        <span className="mt-2 text-sm bg-eco-green text-white px-2 py-1 rounded-full">
-          Unlocked
-        </span>
-      ) : (
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="mt-2 bg-eco-yellow hover:bg-eco-yellow/90 text-black"
-          onClick={onUnlock}
-        >
-          <span className="mr-1">🪙</span> {cost} Coins
-        </Button>
-      )}
+    <div className="container mx-auto py-8">
+      <h1 className="text-2xl font-bold mb-4">Rewards</h1>
+      <p className="mb-4">Redeem your points for these awesome rewards!</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {rewards.map((reward) => (
+          <div key={reward.id} className="bg-white rounded-lg shadow-md p-4">
+            <h2 className="text-xl font-semibold mb-2">{reward.name}</h2>
+            <p className="text-gray-700 mb-2">{reward.description}</p>
+            <p className="text-green-600 font-bold">{reward.points} Points</p>
+            <button
+              className="mt-4 bg-eco-green text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+              onClick={() => {
+                toast("Reward Redeemed!", {
+                  description: `You've redeemed ${reward.name}!`,
+                  position: "top-center",
+                });
+              }}
+            >
+              Redeem
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

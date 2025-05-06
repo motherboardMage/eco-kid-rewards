@@ -23,7 +23,7 @@ const Layout = () => {
       <main className="flex-1 container mx-auto px-4 py-6 max-w-md flex flex-col">
         {isInitialized ? <Outlet /> : <LoadingScreen />}
       </main>
-      <NavBar />
+      {isInitialized && <NavBar />}
     </div>
   );
 };

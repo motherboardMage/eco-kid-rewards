@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -35,7 +34,6 @@ const CameraPage = () => {
       console.error("Error accessing camera:", err);
       toast("Camera Error", {
         description: "Could not access camera. Please check permissions.",
-        variant: "destructive"
       });
     }
   };
@@ -105,7 +103,6 @@ const CameraPage = () => {
       console.error("Error processing waste image:", error);
       toast("Processing Error", {
         description: "There was a problem analyzing the image.",
-        variant: "destructive"
       });
       setProcessing(false);
     }
