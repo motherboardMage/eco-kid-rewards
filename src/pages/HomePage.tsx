@@ -1,106 +1,88 @@
 
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Trophy, Camera } from "lucide-react";
 import { useUserStore } from "@/stores/userStore";
-import { Coins, Star, Gift, Camera } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
+import ModelInfo from "@/components/ModelInfo";
+import { useEffect } from "react";
+import { initializeModel } from "@/utils/wasteClassifier";
 
 const HomePage = () => {
-  const { coins, level, username } = useUserStore();
-  const [greeting, setGreeting] = useState("");
-
+  const navigate = useNavigate();
+  const { username, coins, level } = useUserStore();
+  
+  // Initialize model on app start
   useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) {
-      setGreeting("Good Morning");
-    } else if (hour < 18) {
-      setGreeting("Good Afternoon");
-    } else {
-      setGreeting("Good Evening");
-    }
+    // Start model initialization in the background
+    initializeModel();
   }, []);
 
-  const handleDailyTip = () => {
-    const tips = [
-      "Paper can be recycled 5-7 times before the fibers become too short!",
-      "Plastic takes up to 1000 years to decompose in landfills!",
-      "Glass can be recycled indefinitely without loss of quality!",
-      "Composting can reduce household waste by up to 30%!",
-      "Recycling one aluminum can saves enough energy to run a TV for three hours!"
-    ];
-    const randomTip = tips[Math.floor(Math.random() * tips.length)];
-    toast("Eco Tip of the Day", {
-      description: randomTip,
-      position: "top-center",
-    });
-  };
-
+  const actionCards = [
+    {
+      title: "Scan Waste",
+      description: "Use your camera to identify waste and earn rewards",
+      icon: <Camera size={32} className="text-white" />,
+      color: "bg-eco-green",
+      action: () => navigate("/camera")
+    },
+    {
+      title: "Check Progress",
+      description: "View your waste identification progress and achievements",
+      icon: <Trophy size={32} className="text-white" />,
+      color: "bg-eco-orange",
+      action: () => navigate("/progress")
+    }
+  ];
+  
   return (
     <div className="flex flex-col h-full">
-      <header className="mb-6 text-center">
-        <h1 className="text-3xl font-bold text-eco-green mb-2">
-          WasteWiseAI
-        </h1>
-        <p className="text-gray-600">
-          Learn waste segregation the fun way!
-        </p>
+      <header className="text-center mb-6">
+        <h1 className="text-3xl font-bold text-eco-green">WasteWiseAI</h1>
+        <p className="text-gray-600">Learning waste segregation made fun!</p>
       </header>
       
-      <div className="bg-white rounded-2xl shadow-md p-4 mb-6">
-        <h2 className="text-xl font-semibold mb-2">
-          {greeting}, {username || "Eco Hero"}!
-        </h2>
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <Coins className="text-eco-yellow mr-2" size={24} />
-            <span className="font-bold">{coins}</span>
-          </div>
-          <div className="flex items-center">
-            <Star className="text-eco-orange mr-2" size={24} />
+      <div className="bg-white rounded-2xl shadow-md p-4 mb-6 flex items-center justify-between">
+        <div>
+          <p className="text-gray-600">Welcome{username ? `, ${username}` : ''}!</p>
+          <div className="flex items-center mt-1">
+            <Trophy size={18} className="text-eco-orange mr-2" />
             <span className="font-bold">Level {level}</span>
+            <span className="mx-2">•</span>
+            <span className="font-bold">{coins} coins</span>
           </div>
         </div>
+        <ModelInfo />
       </div>
-
-      <Link to="/camera" className="mb-6">
-        <div className="bg-eco-green text-white rounded-2xl p-6 shadow-md hover:bg-eco-green/90 transition-colors flex items-center justify-between">
-          <div className="flex flex-col">
-            <h3 className="text-xl font-bold mb-2">Scan Waste</h3>
-            <p className="text-sm text-white/80">Identify and learn waste categories</p>
+      
+      <div className="space-y-4 flex-1">
+        {actionCards.map((card, index) => (
+          <div 
+            key={index}
+            className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer"
+            onClick={card.action}
+          >
+            <div className="flex">
+              <div className={`${card.color} p-4 flex items-center justify-center w-20`}>
+                {card.icon}
+              </div>
+              <div className="p-4 flex-1">
+                <h3 className="font-bold text-lg">{card.title}</h3>
+                <p className="text-gray-600 text-sm">{card.description}</p>
+              </div>
+            </div>
           </div>
-          <Camera size={40} className="ml-4" />
-        </div>
-      </Link>
-
-      <Link to="/rewards" className="mb-6">
-        <div className="bg-eco-orange text-white rounded-2xl p-6 shadow-md hover:bg-eco-orange/90 transition-colors flex items-center justify-between">
-          <div className="flex flex-col">
-            <h3 className="text-xl font-bold mb-2">Rewards</h3>
-            <p className="text-sm text-white/80">Redeem your points for cool prizes</p>
-          </div>
-          <Gift size={40} className="ml-4" />
-        </div>
-      </Link>
-
-      <div className="bg-white rounded-2xl shadow-md p-4 mb-6">
-        <h3 className="text-lg font-semibold mb-2">Today's Challenge</h3>
-        <p className="text-gray-600 mb-3">
-          Scan and correctly sort 5 waste items today!
-        </p>
-        <div className="bg-gray-100 rounded-full h-4 mb-2">
-          <div className="bg-eco-green rounded-full h-4" style={{ width: "40%" }}></div>
-        </div>
-        <div className="text-right text-sm text-gray-600">2/5 completed</div>
+        ))}
       </div>
-
-      <Button
-        variant="default"
-        className="bg-eco-blue hover:bg-eco-blue/90 mt-auto"
-        onClick={handleDailyTip}
-      >
-        Eco Tip of the Day
-      </Button>
+      
+      <div className="mt-6 p-4 bg-eco-blue/10 rounded-xl">
+        <h3 className="font-bold mb-2">How to use</h3>
+        <ol className="list-decimal pl-5 space-y-1 text-sm text-gray-700">
+          <li>Upload or take a photo of waste</li>
+          <li>Our AI will identify the waste type</li>
+          <li>Learn about proper disposal</li>
+          <li>Earn coins and level up!</li>
+        </ol>
+      </div>
     </div>
   );
 };
