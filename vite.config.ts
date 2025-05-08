@@ -7,14 +7,14 @@ import fs from 'fs';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: "0.0.0.0",
     port: 8080,
-    https: mode === 'development' ? {
-      // You can use your own certificates here if you have them
-      // Otherwise, Vite will generate temporary certificates
-      cert: undefined,
-      key: undefined,
-    } : false,
+    https: mode === 'development'
+      ? {
+          key: fs.readFileSync('./certs/localhost-key.pem'),
+          cert: fs.readFileSync('./certs/localhost-cert.pem'),
+        }
+      : false,
   },
   plugins: [
     react(),
