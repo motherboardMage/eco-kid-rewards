@@ -7,7 +7,8 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     url: "https://4d24526c-aa1a-4608-b198-a0e7b17c415e.lovableproject.com?forceHideBadge=true",
-    cleartext: true
+    cleartext: true,
+    androidScheme: "https"
   },
   android: {
     backgroundColor: "#FFFFFF"
