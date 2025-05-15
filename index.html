@@ -18,9 +18,32 @@
   </head>
 
   <body>
+    
     <div id="root"></div>
+    <input type="file" id="imageUpload" accept="image/*" />
+    <img id="preview" style="display:none;" />
+
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      const imageUpload = document.getElementById('imageUpload');
+      const preview = document.getElementById('preview');
+
+      imageUpload.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            // Call predict function here
+            predict(preview);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    </script>
   </body>
 </html>
